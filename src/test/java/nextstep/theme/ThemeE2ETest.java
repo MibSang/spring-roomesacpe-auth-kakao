@@ -57,11 +57,31 @@ public class ThemeE2ETest {
         var response = RestAssured
                 .given().log().all()
                 .param("date", "2022-08-11")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .when().get("/themes")
                 .then().log().all()
                 .statusCode(HttpStatus.OK.value())
                 .extract();
         assertThat(response.jsonPath().getList(".").size()).isGreaterThan(0);
+    }
+
+    @DisplayName("권한 없이 테마 목록을 조회하면 예외가 발생한다.")
+    @Test
+    public void noAuthGetThemes() {
+        createTheme();
+
+        var response = RestAssured
+                .given().log().all()
+                .param("date", "2022-08-11")
+                .when().get("/themes")
+                .then().log().all()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .extract();
+
+        assertThat(response.body().jsonPath().getString("message"))
+                .isEqualTo(AuthErrorCode.UNAUTHORIZED.getMessage());
+        assertThat(response.statusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     @DisplayName("테마를 삭제한다")

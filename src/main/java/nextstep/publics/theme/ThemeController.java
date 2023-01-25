@@ -24,6 +24,7 @@ public class ThemeController {
     }
 
     @GetMapping
+    @Authorization(level = AuthorizationLevel.USER)
     public ResponseEntity<List<Theme>> showThemes() {
         List<Theme> results = themeService.findAll();
         return ResponseEntity.ok().body(results);
