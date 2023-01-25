@@ -1,6 +1,7 @@
 package nextstep.theme;
 
 import io.restassured.RestAssured;
+import nextstep.framework.exception.AuthErrorCode;
 import nextstep.publics.login.TokenRequest;
 import nextstep.publics.theme.ThemeRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,7 +90,10 @@ public class ThemeE2ETest {
                 .then().log().all()
                 .extract();
 
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        assertThat(response.body().jsonPath().getString("message"))
+                .isEqualTo(AuthErrorCode.UNAUTHORIZED.getMessage());
+        assertThat(response.statusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     @DisplayName("유저 권한으로 테마를 삭제하면 예외가 발생한다.")
@@ -115,6 +119,8 @@ public class ThemeE2ETest {
                 .then().log().all()
                 .extract();
 
+        assertThat(response.body().jsonPath().getString("message"))
+                .isEqualTo(AuthErrorCode.UNAUTHORIZED.getMessage());
         assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
