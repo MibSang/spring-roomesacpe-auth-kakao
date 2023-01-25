@@ -3,13 +3,16 @@ package nextstep.reservation;
 import io.restassured.RestAssured;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
-import nextstep.member.MemberRequest;
-import nextstep.schedule.ScheduleRequest;
-import nextstep.theme.ThemeRequest;
+import nextstep.publics.login.TokenRequest;
+import nextstep.publics.member.MemberRequest;
+import nextstep.publics.reservation.Reservation;
+import nextstep.publics.schedule.ScheduleRequest;
+import nextstep.publics.theme.ThemeRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
@@ -25,17 +28,30 @@ class ReservationE2ETest {
     public static final String TIME = "13:00";
     public static final String NAME = "name";
 
-    private ReservationRequest request;
+    private String request;
     private Long themeId;
     private Long scheduleId;
     private Long memberId;
+    private String token;
 
     @BeforeEach
     void setUp() {
+        TokenRequest tokenRequest = new TokenRequest("admin", "pass");
+        var tokenResponse = RestAssured
+                .given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(tokenRequest)
+                .when().post("/login/token")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .extract();
+        token = tokenResponse.jsonPath().getString("accessToken");
+
         ThemeRequest themeRequest = new ThemeRequest("테마이름", "테마설명", 22000);
         var themeResponse = RestAssured
                 .given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .body(themeRequest)
                 .when().post("/themes")
                 .then().log().all()
@@ -48,6 +64,7 @@ class ReservationE2ETest {
         var scheduleResponse = RestAssured
                 .given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .body(scheduleRequest)
                 .when().post("/schedules")
                 .then().log().all()
@@ -69,10 +86,9 @@ class ReservationE2ETest {
         String[] memberLocation = memberResponse.header("Location").split("/");
         memberId = Long.parseLong(memberLocation[memberLocation.length - 1]);
 
-        request = new ReservationRequest(
-                scheduleId,
-                "브라운"
-        );
+        request = "{\n" +
+                "    \"scheduleId\": " + scheduleId + "\n" +
+                "}";
     }
 
     @DisplayName("예약을 생성한다")
@@ -82,6 +98,7 @@ class ReservationE2ETest {
                 .given().log().all()
                 .body(request)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .when().post("/reservations")
                 .then().log().all()
                 .extract();
@@ -113,6 +130,7 @@ class ReservationE2ETest {
 
         var response = RestAssured
                 .given().log().all()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .when().delete(reservation.header("Location"))
                 .then().log().all()
                 .extract();
@@ -127,6 +145,7 @@ class ReservationE2ETest {
 
         var response = RestAssured
                 .given().log().all()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .body(request)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when().post("/reservations")
@@ -156,6 +175,7 @@ class ReservationE2ETest {
     void createNotExistReservation() {
         var response = RestAssured
                 .given().log().all()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .when().delete("/reservations/1")
                 .then().log().all()
                 .extract();
@@ -166,6 +186,7 @@ class ReservationE2ETest {
     private ExtractableResponse<Response> createReservation() {
         return RestAssured
                 .given().log().all()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .body(request)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when().post("/reservations")
