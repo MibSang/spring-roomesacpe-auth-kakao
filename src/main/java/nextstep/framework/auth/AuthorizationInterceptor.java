@@ -28,9 +28,15 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
         }
 
         String token = AuthorizationExtractor.extractTokenFromRequest();
-        if (token == null || jwtTokenProvider.getAuthorization(token).equals("USER")) {
+        if (!jwtTokenProvider.validateToken(token)) {
             throw new BusinessException(AuthErrorCode.UNAUTHORIZED);
         }
-        return true;
+
+        AuthorizationLevel apiLevel = authorization.level();
+        AuthorizationLevel memberLevel = jwtTokenProvider.getAuthorization(token);
+        if (memberLevel.canAccessTo(apiLevel)) {
+            return true;
+        }
+        throw new BusinessException(AuthErrorCode.UNAUTHORIZED);
     }
 }

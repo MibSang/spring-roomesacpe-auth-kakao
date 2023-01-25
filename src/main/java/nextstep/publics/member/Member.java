@@ -1,12 +1,14 @@
 package nextstep.publics.member;
 
+import nextstep.framework.auth.AuthorizationLevel;
+
 public class Member {
     private Long id;
     private String username;
     private String password;
     private String name;
     private String phone;
-    private String auth;
+    private AuthorizationLevel auth;
 
     public Member(Long id, String username, String password, String name, String phone, String auth) {
         this.id = id;
@@ -14,7 +16,7 @@ public class Member {
         this.password = password;
         this.name = name;
         this.phone = phone;
-        this.auth = auth;
+        this.auth = AuthorizationLevel.getAuthorizationFromString(auth);
     }
 
     public Member(String username, String password, String name, String phone) {
@@ -44,7 +46,7 @@ public class Member {
         return phone;
     }
 
-    public String getAuth() {
+    public AuthorizationLevel getAuth() {
         return auth;
     }
 

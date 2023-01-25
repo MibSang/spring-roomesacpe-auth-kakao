@@ -1,5 +1,6 @@
 package nextstep.auth;
 
+import nextstep.framework.auth.AuthorizationLevel;
 import nextstep.framework.auth.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,14 +22,14 @@ class JwtTokenProviderTest {
 
     @Test
     void createToken() {
-        String token = jwtTokenProvider.createToken("1", "USER");
+        String token = jwtTokenProvider.createToken("1", AuthorizationLevel.USER);
 
         assertThat(jwtTokenProvider.validateToken(token)).isTrue();
     }
 
     @Test
     void getPrincipal() {
-        String token = jwtTokenProvider.createToken("1", "USER");
+        String token = jwtTokenProvider.createToken("1", AuthorizationLevel.USER);
 
         assertThat(jwtTokenProvider.getPrincipal(token)).isEqualTo("1");
     }
